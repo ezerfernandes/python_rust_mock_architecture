@@ -1,0 +1,37 @@
+[package]
+name = "python-rust-mock-architecture"
+version = "0.1.0"
+edition = "2021"
+description = "A minimal Python package backed by a Rust extension"
+exclude = [
+    "dist/",
+    "dist/**",
+    "target/",
+    "target/**",
+    ".venv/",
+    ".venv/**",
+    ".mypy_cache/",
+    ".mypy_cache/**",
+    ".pytest_cache/",
+    ".pytest_cache/**",
+    ".ruff_cache/",
+    ".ruff_cache/**",
+    "**/__pycache__/",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/*.pyo",
+    "**/*.so",
+    "**/*.pyd",
+    "**/*.dylib",
+    "**/*.dll",
+]
+
+[lib]
+name = "_native"
+crate-type = ["cdylib"]
+
+[features]
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+pyo3 = { version = "0.27", features = ["abi3-py311"] }

@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install "${{ matrix.python-version }}"
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: Sync locked environment
+        run: uv sync --locked --python "${{ matrix.python-version }}"
+
+      - name: Install development extension
+        run: uv run --locked maturin develop --locked
+
+      - name: Run Python checks
+        run: |
+          uv run --locked pytest
+          uv run --locked ruff format --check .
+          uv run --locked ruff check .
+          uv run --locked mypy python tests/python
+          uv lock --check
+
+  rust:
+    name: Rust checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: Run Rust checks
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets --all-features -- -D warnings
+          cargo test --locked
+
+  package:
+    name: Package and smoke test
+    needs: [python, rust]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install 3.11
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build wheel and source distribution
+        run: |
+          uv sync --locked --python 3.11
+          uv run --locked maturin build --locked --sdist --out dist
+          uv run --locked maturin build --locked --sdist --out dist
+          test -n "$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)"
+          test -n "$(find dist -maxdepth 1 -type f -name '*.tar.gz' -print -quit)"
+          package_list="$(mktemp)"
+          cargo package --list --allow-dirty --locked > "$package_list"
+          if grep -Eq '(^|/)(dist|target|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|__pycache__)(/|$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$' "$package_list"; then
+            echo "generated artifacts found in Cargo package"
+            cat "$package_list"
+            exit 1
+          fi
+          sdist="$(find dist -maxdepth 1 -type f -name '*.tar.gz' -print -quit)"
+          if tar -tzf "$sdist" | grep -Eq '(^|/)(dist|target|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|__pycache__)(/|$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$'; then
+            echo "generated artifacts found in sdist"
+            exit 1
+          fi
+
+      - name: Smoke test wheel in an isolated environment
+        run: |
+          wheel="$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)"
+          smoke_env="$(mktemp -d)"
+          uv venv --python 3.11 "$smoke_env"
+          uv pip install --python "$smoke_env/bin/python" "$wheel"
+          (
+            cd "$(mktemp -d)"
+            "$smoke_env/bin/python" -c '
+          from pathlib import Path
+
+          import python_rust_mock_architecture as package
+          import python_rust_mock_architecture._native as native
+
+          assert package.__all__ == ["add"]
+          assert package.add(40, 2) == 42
+          assert Path(native.__file__ or "").suffix in {".so", ".pyd"}
+          '
+          )
