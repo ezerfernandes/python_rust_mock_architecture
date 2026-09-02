@@ -1,10 +1,18 @@
-# Python and Rust add extension
+# Rust integration template for Python projects
 
-This repository is a small example of a Python package with a Rust extension.
-It uses PyO3 to implement one checked integer operation and Maturin to build
-and install the extension. Python owns the package namespace, public
+This repository is a runnable example and an agent playbook for adding a Rust
+extension to an existing Python project. It covers Python libraries, standalone
+programs, FastAPI services, and Django services without forcing a package-manager
+migration.
+
+The example uses PyO3 to implement one checked integer operation and Maturin to
+build and install the extension. Python owns the package namespace, public
 documentation, and typing metadata. The native module stays private so the
-package can control its public API.
+package controls its public API.
+
+Agents should start with [AGENTS.md](AGENTS.md). It contains the topology decision,
+tooling-preservation rules, framework recipes, testing layers, package-manager
+command matrix, and extension checklist.
 
 ## API
 
@@ -30,99 +38,74 @@ Install [uv](https://docs.astral.sh/uv/) and a stable Rust toolchain with
 `rustc` and `cargo`. The project requires Python 3.11 or newer. uv can install
 the selected Python interpreter with `uv python install 3.11`.
 
-## Local setup
+## Quick start
 
 From the repository root:
 
 ```text
 uv python install 3.11
-uv sync --locked
-uv run --locked maturin develop --locked
+make setup PYTHON_VERSION=3.11
+make develop PYTHON_VERSION=3.11
+make test
 ```
 
-The last command builds the Rust extension and installs it into the uv
-environment. There is no Python fallback implementation, so the extension
-must be built before importing the package from a clean checkout.
+`make develop` builds the Rust extension and installs it into the uv environment.
+There is no Python fallback implementation, so the extension must be built before
+importing the package from a clean checkout.
+
+List every supported command:
+
+```text
+make help
+```
 
 ## Tests and quality checks
 
-Run the Python tests against the development-installed extension:
+Run both test suites:
 
 ```text
-uv run --locked pytest
+make test
 ```
 
-Run the Rust unit tests:
+Run formatting, linting, typing, tests, coverage, and package verification:
 
 ```text
-cargo test --locked
+make check
 ```
 
-The checks used by CI are:
+Python coverage uses the locked `pytest-cov` dependency and requires 100% for the
+small Python wrapper. Rust coverage requires `cargo-llvm-cov` and an 80% line
+threshold:
 
 ```text
-uv run --locked ruff format --check .
-uv run --locked ruff check .
-uv run --locked mypy python tests/python
-cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test --locked
-uv lock --check
+cargo +stable install cargo-llvm-cov --locked
+make coverage-python
+make coverage-rust
 ```
 
 ## Wheel and source distribution
 
-Build both distribution formats twice into the ignored `dist/` directory.
-The second build checks that the first build's artifacts are not copied into
-the new source distribution:
-
-```bash
-mkdir -p dist
-uv run --locked maturin build --locked --sdist --out dist
-uv run --locked maturin build --locked --sdist --out dist
-find dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) -print
-sdist="$(find dist -maxdepth 1 -type f -name '*.tar.gz' -print -quit)"
-if tar -tzf "$sdist" | grep -Eq '(^|/)(dist|target|.venv|.mypy_cache|.pytest_cache|.ruff_cache|__pycache__)(/|$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$'; then
-  echo "generated artifacts found in sdist"
-  exit 1
-fi
-```
-
-Cargo's source-package listing can be inspected with:
+Build normal developer artifacts in `dist/`:
 
 ```text
-cargo package --list --allow-dirty --locked
+make build
 ```
 
-To verify the wheel without importing from the checkout, create an isolated
-environment and run the smoke test from a temporary directory:
+Run the stricter package gate:
 
-```bash
-wheel="$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)"
-smoke_env="$(mktemp -d)"
-uv venv --python 3.11 "$smoke_env"
-uv pip install --python "$smoke_env/bin/python" "$wheel"
-(
-  cd "$(mktemp -d)"
-  "$smoke_env/bin/python" -c '
-from pathlib import Path
-
-import python_rust_mock_architecture as package
-import python_rust_mock_architecture._native as native
-
-assert package.__all__ == ["add"]
-assert package.add(40, 2) == 42
-assert Path(native.__file__ or "").suffix in {".so", ".pyd"}
-'
-)
+```text
+make package-check
 ```
 
-The import check runs outside the repository and confirms that the installed
-package loads a compiled extension.
+`package-check` builds twice in a fresh temporary directory, derives the expected
+artifact names from project metadata, rejects generated files in the source
+distribution, and imports the installed wheel from outside the checkout.
 
 ## Source tree
 
 ```text
+AGENTS.md                    Agent playbook for adapting the Rust pattern
+Makefile                     Stable local and CI command surface
 python/                       Python package namespace and typing metadata
 src/lib.rs                    PyO3 module and checked Rust addition
 tests/python/test_add.py      Python API and boundary tests
@@ -130,7 +113,7 @@ pyproject.toml                Python metadata, Maturin, Ruff, and Mypy config
 Cargo.toml                    Rust crate and PyO3 dependency
 uv.lock                      Locked Python development dependencies
 Cargo.lock                   Locked Rust dependencies
-.github/workflows/ci.yml     CI checks and isolated wheel verification
+.github/workflows/ci.yml     CI checks through the Makefile interface
 ```
 
 The project has one Python package and one uv lockfile. It does not use an
@@ -139,6 +122,6 @@ gains another independent Python project.
 
 ## Non-goals
 
-This example has no CLI, extra arithmetic functions, Python fallback, web
-service, database, async runtime, benchmark suite, publishing workflow, or
-cross-platform release-wheel matrix.
+This template does not optimize code or add benchmarks. The example has no CLI,
+extra arithmetic functions, Python fallback, web service, database, async runtime,
+publishing workflow, or cross-platform release-wheel matrix.
