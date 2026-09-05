@@ -83,6 +83,10 @@ make coverage-python
 make coverage-rust
 ```
 
+The pinned Verus release and a minimal proof/build spike are documented in
+[`docs/verus-toolchain.md`](docs/verus-toolchain.md). The spike validates the
+toolchain before the verified core is added.
+
 ## Wheel and source distribution
 
 Build normal developer artifacts in `dist/`:
