@@ -1,5 +1,6 @@
 [workspace]
 members = ["crates/verified-core"]
+exclude = ["tools/verus-spike"]
 resolver = "2"
 
 [package]
