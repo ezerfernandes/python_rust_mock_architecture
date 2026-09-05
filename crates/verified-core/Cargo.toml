@@ -1,0 +1,15 @@
+[package]
+name = "verified-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.97"
+description = "Private pure-Rust core for Verus-verified algorithms"
+
+[dependencies]
+vstd = "=0.0.0-2026-08-30-0159"
+
+[package.metadata.verus]
+verify = true
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(verus_only)'] }

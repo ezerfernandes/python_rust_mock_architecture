@@ -85,7 +85,7 @@ make coverage-rust
 
 The pinned Verus release and a minimal proof/build spike are documented in
 [`docs/verus-toolchain.md`](docs/verus-toolchain.md). The spike validates the
-toolchain before the verified core is added.
+toolchain used by the private verified core.
 
 ## Wheel and source distribution
 
@@ -112,17 +112,19 @@ AGENTS.md                    Agent playbook for adapting the Rust pattern
 Makefile                     Stable local and CI command surface
 python/                       Python package namespace and typing metadata
 src/lib.rs                    PyO3 module and checked Rust addition
+crates/verified-core/         Private pure-Rust Verus-verified core workspace member
 tests/python/test_add.py      Python API and boundary tests
 pyproject.toml                Python metadata, Maturin, Ruff, and Mypy config
-Cargo.toml                    Rust crate and PyO3 dependency
+Cargo.toml                    Rust workspace, extension crate, and dependencies
 uv.lock                      Locked Python development dependencies
 Cargo.lock                   Locked Rust dependencies
 .github/workflows/ci.yml     CI checks through the Makefile interface
 ```
 
 The project has one Python package and one uv lockfile. It does not use an
-artificial uv workspace. A workspace would make sense if the repository later
-gains another independent Python project.
+artificial uv workspace. The Rust portion is a small Cargo workspace: the root
+package remains the Maturin extension, while `crates/verified-core` contains
+private pure-Rust code opted into Verus verification.
 
 ## Non-goals
 

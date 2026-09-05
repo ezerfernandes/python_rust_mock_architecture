@@ -1,3 +1,7 @@
+[workspace]
+members = ["crates/verified-core"]
+resolver = "2"
+
 [package]
 name = "python-rust-mock-architecture"
 version = "0.1.0"
@@ -8,6 +12,8 @@ exclude = [
     "dist/**",
     "target/",
     "target/**",
+    "**/target/",
+    "**/target/**",
     ".venv/",
     ".venv/**",
     ".mypy_cache/",
@@ -35,3 +41,4 @@ extension-module = ["pyo3/extension-module"]
 
 [dependencies]
 pyo3 = { version = "0.27", features = ["abi3-py311"] }
+verified-core = { path = "crates/verified-core" }
