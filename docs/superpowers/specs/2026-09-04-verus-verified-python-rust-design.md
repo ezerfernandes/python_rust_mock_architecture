@@ -3,6 +3,12 @@
 Date: 2026-09-04
 Status: Approved design
 
+Implementation status as of 2026-09-05: the private core contains and locally
+verifies total checked `i64` addition and checked left-to-right summation. The
+public Python adapter still exposes only `add`, and the adapter is outside the
+proved boundary. The remaining public functions, adapter wiring, and Verus CI
+integration below are still requirements, not completed behavior.
+
 ## Goal
 
 Extend this reference repository so it teaches how to put a Verus-verified Rust
@@ -168,4 +174,3 @@ The goal is complete only when the proof gate, ordinary Rust checks, Python
 contract tests, coverage, typing, linting, package checks, and isolated-wheel
 smoke test all pass from documented commands. Verification claims must match the
 recorded trust boundary.
-

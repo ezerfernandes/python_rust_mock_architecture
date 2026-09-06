@@ -8,7 +8,10 @@ migration.
 The example uses PyO3 to implement one checked integer operation and Maturin to
 build and install the extension. Python owns the package namespace, public
 documentation, and typing metadata. The native module stays private so the
-package controls its public API.
+package controls its public API. The Rust workspace also contains a private
+Verus-verified core. Its current proof covers checked `i64` addition and
+left-to-right checked summation. The Python adapter still exposes only `add`,
+and the adapter itself remains outside the proved boundary.
 
 Agents should start with [AGENTS.md](AGENTS.md). It contains the topology decision,
 tooling-preservation rules, framework recipes, testing layers, package-manager
@@ -34,9 +37,14 @@ detail rather than a second public API.
 
 ## Requirements
 
-Install [uv](https://docs.astral.sh/uv/) and a stable Rust toolchain with
-`rustc` and `cargo`. The project requires Python 3.11 or newer. uv can install
-the selected Python interpreter with `uv python install 3.11`.
+Install [uv](https://docs.astral.sh/uv/) and a Rust toolchain with `rustc` and
+`cargo`. The project requires Python 3.11 or newer. uv can install the selected
+Python interpreter with `uv python install 3.11`.
+
+The pinned Verus workflow uses Verus `0.2026.08.30.b432e82`, Rust `1.97.1`, and
+`vstd` `0.0.0-2026-08-30-0159`. Follow
+[`docs/verus-toolchain.md`](docs/verus-toolchain.md) before running proof
+targets.
 
 ## Quick start
 
@@ -73,6 +81,9 @@ Run formatting, linting, typing, tests, coverage, and package verification:
 make check
 ```
 
+`make check` also runs the full workspace Verus proof and the proof-hygiene
+scan. It stops before Rust coverage if `cargo-llvm-cov` is missing.
+
 Python coverage uses the locked `pytest-cov` dependency and requires 100% for the
 small Python wrapper. Rust coverage requires `cargo-llvm-cov` and an 80% line
 threshold:
@@ -83,9 +94,20 @@ make coverage-python
 make coverage-rust
 ```
 
-The pinned Verus release and a minimal proof/build spike are documented in
-[`docs/verus-toolchain.md`](docs/verus-toolchain.md). The spike validates the
-toolchain used by the private verified core.
+The pinned Verus release, standalone proof/build spike, and repository proof
+gate are documented in [`docs/verus-toolchain.md`](docs/verus-toolchain.md). The
+spike validates the
+toolchain used by the private verified core. The repository proof targets are:
+
+```text
+make verus-hygiene
+make verus-verify
+```
+
+`verus-verify` checks the workspace with `-V check-api-safety`. Use
+`make verus-focus` for a faster development proof of `verified-core`; run the
+full target before handoff. The pinned standalone spike commands are also in the
+toolchain document.
 
 ## Wheel and source distribution
 
@@ -113,6 +135,9 @@ Makefile                     Stable local and CI command surface
 python/                       Python package namespace and typing metadata
 src/lib.rs                    PyO3 module and checked Rust addition
 crates/verified-core/         Private pure-Rust Verus-verified core workspace member
+tools/verus-spike/            Standalone pinned-toolchain proof fixture
+tools/verus-toolchain.toml    Verus, Rust, Z3, and vstd pins
+rust-toolchain.toml           Rust toolchain selected by Cargo and rustup
 tests/python/test_add.py      Python API and boundary tests
 pyproject.toml                Python metadata, Maturin, Ruff, and Mypy config
 Cargo.toml                    Rust workspace, extension crate, and dependencies
@@ -128,6 +153,8 @@ private pure-Rust code opted into Verus verification.
 
 ## Non-goals
 
-This template does not optimize code or add benchmarks. The example has no CLI,
-extra arithmetic functions, Python fallback, web service, database, async runtime,
-publishing workflow, or cross-platform release-wheel matrix.
+This template does not optimize code or add benchmarks. The public Python
+example has no extra arithmetic functions, Python fallback, web service,
+database, async runtime, publishing workflow, or cross-platform release-wheel
+matrix. The private verified core has additional Rust-only examples that are not
+yet exposed through Python.

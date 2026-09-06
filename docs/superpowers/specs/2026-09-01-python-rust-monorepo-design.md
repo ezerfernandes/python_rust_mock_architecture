@@ -185,8 +185,8 @@ uv run --locked ruff format --check .
 uv run --locked ruff check .
 uv run --locked mypy python tests/python
 cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test --locked
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --locked
 uv lock --check
 uv run --locked maturin build --locked --sdist --out dist
 ```

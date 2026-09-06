@@ -10,9 +10,11 @@ Rust extension to an existing Python project. The guidance must apply to Python
 libraries, FastAPI applications, Django applications, and standalone Python
 programs without forcing them to change package managers.
 
-The current `add` extension remains the small, verified reference. The template
-does not optimize Python code or claim that Rust improves performance. Its job is
-to establish a safe native-module boundary that agents can extend later.
+The current `add` extension remains the small native reference. The private
+`verified-core` crate now holds the Verus-checked arithmetic examples, while the
+PyO3 adapter remains outside the proved boundary. The template does not optimize
+Python code or claim that Rust improves performance. Its job is to establish a
+safe native-module boundary that agents can extend later.
 
 ## Chosen Approach
 

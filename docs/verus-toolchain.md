@@ -50,7 +50,7 @@ rustup toolchain install 1.97.1-x86_64-unknown-linux-gnu --profile minimal
 mkdir -p "$verus_root"
 unzip -q "$download_dir/$verus_archive" -d "$download_dir"
 mv "$download_dir/verus-x86-linux" "$verus_root/$verus_version"
-export PATH="$verus_root/$verus_version:$PATH"
+export PATH="$verus_root/$verus_version:$HOME/.cargo/bin:$PATH"
 ```
 
 Check the installed tools:
@@ -58,11 +58,23 @@ Check the installed tools:
 ```text
 verus --version
 cargo verus --help
+rustc --version
+cargo --version
 z3 --version
 ```
 
 `rust-toolchain.toml` makes normal Cargo commands use Rust 1.97.1 from this
-checkout. `cargo-verus` uses the same pinned toolchain when it invokes Cargo.
+checkout. Keep the Verus release directory and the rustup shims on `PATH`, for
+example:
+
+```bash
+export PATH="$verus_root/$verus_version:$HOME/.cargo/bin:$PATH"
+```
+
+With this pin, `rustc --version` starts with `rustc 1.97.1`, `cargo --version`
+starts with `cargo 1.97.1`, and `verus --version` reports
+`0.2026.08.30.b432e82`. `cargo-verus` uses the same pinned toolchain when it
+invokes Cargo.
 
 ## Proof and normal Cargo build
 
@@ -79,9 +91,42 @@ cargo verus verify --manifest-path tools/verus-spike/Cargo.toml --locked
 cargo build --manifest-path tools/verus-spike/Cargo.toml --locked
 ```
 
-The successful proof reports zero errors for the spike. Verification also checks
-the pinned `vstd` dependency. Normal Cargo erases the Verus annotations and
-builds the library as an ordinary Rust crate.
+The root `Cargo.toml` excludes this fixture from its workspace, so the commands
+above use the spike's own lockfile and remain valid after the workspace is
+loaded. The successful proof reports zero errors for the spike. Verification
+also checks the pinned `vstd` dependency. Normal Cargo erases the Verus
+annotations and builds the library as an ordinary Rust crate.
+
+## Verify the repository core
+
+After installing the pin, run the repository targets from its root:
+
+```text
+make verus-hygiene
+make verus-verify
+```
+
+`verus-verify` runs the full workspace proof with `-V check-api-safety`.
+`make verus-focus` is a faster development shortcut that verifies only
+`verified-core` without rechecking dependencies. The current private core proof
+covers total checked `i64` addition and checked left-to-right summation. The
+root PyO3 adapter and Python package remain outside the proved core.
+
+The complete local gate is:
+
+```text
+make check
+```
+
+It runs the proof gate before typing, tests, coverage, and package checks. Rust
+coverage also requires `cargo-llvm-cov`; install it with:
+
+```text
+cargo +stable install cargo-llvm-cov --locked
+```
+
+The CI workflow installs that coverage tool, but it does not yet install Verus
+or run the repository proof target.
 
 ## Platform scope
 
@@ -92,8 +137,8 @@ does not test those hosts yet. Other operating systems and architectures may
 require a source build and are outside this pin's validation evidence.
 
 The proof spike is an isolated toolchain check. It does not verify PyO3, Python,
-CPython, Maturin, Z3 itself, rustc, LLVM, or the Rust adapter that will call a
-future verified core. Those remain outside the proved boundary.
+CPython, Maturin, Z3 itself, rustc, LLVM, or the Rust adapter that calls the
+current verified core. Those remain outside the proved boundary.
 
 ## Official references
 
