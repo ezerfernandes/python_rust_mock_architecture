@@ -1,11 +1,16 @@
 use pyo3::exceptions::PyOverflowError;
 use pyo3::prelude::*;
+use verified_core::{add as verified_add, ArithmeticError};
 
 /// Add two signed 64-bit integers without wrapping on overflow.
 #[pyfunction]
 fn add(a: i64, b: i64) -> PyResult<i64> {
-    a.checked_add(b)
-        .ok_or_else(|| PyOverflowError::new_err("integer addition overflow"))
+    match verified_add(a, b) {
+        Ok(result) => Ok(result),
+        Err(ArithmeticError::Overflow) => {
+            Err(PyOverflowError::new_err("integer addition overflow"))
+        }
+    }
 }
 
 /// Private native implementation for the public Python package.
