@@ -96,12 +96,43 @@ def test_checked_sum_rejects_invalid_values() -> None:
         checked_sum([1.5])  # type: ignore[list-item]
 
 
+def test_new_functions_accept_keyword_arguments() -> None:
+    assert checked_sum(values=[1, 2, 3]) == 6
+    assert lower_bound(values=[1, 2, 3], target=2) == 1
+    assert binary_search(values=[1, 2, 3], target=2) == 1
+
+
+def test_new_functions_reject_missing_and_extra_arguments() -> None:
+    with pytest.raises(TypeError):
+        checked_sum()  # type: ignore[call-arg]
+    with pytest.raises(TypeError):
+        checked_sum([1], [2])  # type: ignore[call-arg]
+    with pytest.raises(TypeError):
+        lower_bound([1])  # type: ignore[call-arg]
+    with pytest.raises(TypeError):
+        lower_bound([1], 1, 2)  # type: ignore[call-arg]
+    with pytest.raises(TypeError):
+        binary_search([1])  # type: ignore[call-arg]
+    with pytest.raises(TypeError):
+        binary_search([1], 1, 2)  # type: ignore[call-arg]
+
+
+def test_new_functions_reject_invalid_containers() -> None:
+    with pytest.raises(TypeError):
+        checked_sum(1)  # type: ignore[arg-type]
+    with pytest.raises(TypeError):
+        lower_bound(1, 1)  # type: ignore[arg-type]
+    with pytest.raises(TypeError):
+        binary_search(1, 1)  # type: ignore[arg-type]
+
+
 @pytest.mark.parametrize(
     ("values", "target", "expected"),
     [
         ([], 3, 0),
         ([1, 2, 2, 4], 2, 1),
         ([1, 2, 2, 4], 3, 3),
+        ([1, 2, 2, 4], 5, 4),
         ([I64_MIN, 0, I64_MAX], I64_MAX, 2),
     ],
 )
