@@ -106,7 +106,9 @@ make verus-hygiene
 make verus-verify
 ```
 
-`verus-verify` runs the full workspace proof with `-V check-api-safety`.
+`verus-verify` runs the full workspace proof with
+`--fwd-verus-args roots -- -V check-api-safety`, so the API-safety argument is
+scoped to the selected workspace roots while dependencies are still verified.
 `make verus-focus` is a faster development shortcut that verifies only
 `verified-core` without rechecking dependencies. The current private core proof
 covers total checked `i64` addition and checked left-to-right summation. The

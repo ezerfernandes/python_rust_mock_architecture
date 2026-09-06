@@ -384,8 +384,10 @@ make verus-focus
 ```
 
 `verus-verify` runs
-`cargo verus verify --workspace --locked -- -V check-api-safety` after the
-proof-hygiene scan. It checks the opted-in core and its dependencies.
+`cargo verus verify --workspace --locked --fwd-verus-args roots -- -V check-api-safety`
+after the proof-hygiene scan. It checks the opted-in core and
+its dependencies while forwarding the API-safety argument only to the selected
+workspace roots.
 `verus-focus` runs the same proof for `verified-core` without rechecking
 dependencies and is only a development shortcut. Run the full target before
 handoff. A normal extension build still uses Maturin and Cargo.
