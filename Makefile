@@ -18,7 +18,7 @@ VERUS_ARCHIVE_SHA256 ?= 067f5f72a457fe66b77c0c10b180f2a919a9c7481a8baa024ffc716a
 VERUS_RELEASE_URL ?= https://github.com/verus-lang/verus/releases/download/release%2F$(VERUS_VERSION)/verus-$(VERUS_VERSION)-x86-linux.zip
 VERUS_INSTALL_DOCS ?= docs/verus-toolchain.md
 VERUS_PROOF_DIR ?= crates/verified-core
-VERUS_HYGIENE_PATTERN ?= (^|[^[:alnum:]_])(assume|admit|axiom)[[:space:]]*[({:]|external_body|assume_specification
+VERUS_HYGIENE_PATTERN ?= (^|[^[:alnum:]_])(assume|admit|axiom)[[:space:]]*[({:]|external_body|assume_specification|external_fn_specification|verifier::external
 
 .PHONY: help require-uv require-cargo require-verus setup-python setup-rust \
 	setup develop test-python test-rust test coverage-python coverage-rust \
