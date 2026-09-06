@@ -3,11 +3,11 @@
 Date: 2026-09-04
 Status: Approved design
 
-Implementation status as of 2026-09-05: the private core contains and locally
-verifies total checked `i64` addition and checked left-to-right summation. The
-public Python adapter still exposes only `add`, and the adapter is outside the
-proved boundary. The remaining public functions, adapter wiring, and Verus CI
-integration below are still requirements, not completed behavior.
+Implementation status as of 2026-09-06: the private core contains and locally
+verifies total checked `i64` addition, checked left-to-right summation, sorted
+lower-bound search, and first-match binary search. The public Python adapter
+exposes all four functions and remains outside the proved boundary. Verus CI
+integration and the final audit below remain requirements.
 
 ## Goal
 

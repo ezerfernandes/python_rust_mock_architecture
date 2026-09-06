@@ -133,13 +133,18 @@ package-check: setup ## Verify clean packages and smoke-test the installed wheel
 		grep -En '(^|/)(dist|target|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|__pycache__)(/|$$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$$' <<< "$$package_list" >&2; \
 		exit 1; \
 	fi; \
-	if tar -tzf "$${sdists[0]}" | grep -E '(^|/)(dist|target|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|__pycache__)(/|$$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$$' >/dev/null; then \
+	archive_listing="$${artifact_dir}/source-distribution.list"; \
+	if ! tar -tzf "$${sdists[0]}" > "$$archive_listing"; then \
+		echo "unable to read source distribution archive" >&2; \
+		exit 1; \
+	fi; \
+	if grep -Eq '(^|/)(dist|target|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|__pycache__)(/|$$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$$' "$$archive_listing"; then \
 		echo "generated artifacts found in source distribution" >&2; \
 		exit 1; \
 	fi; \
 	$(UV) venv --python "$(SMOKE_PYTHON)" "$$smoke_env"; \
 	$(UV) pip install --python "$$smoke_env/bin/python" "$${wheels[0]}"; \
 	cd "$$smoke_work"; \
-	"$$smoke_env/bin/python" -c 'from pathlib import Path; import python_rust_mock_architecture as package; import python_rust_mock_architecture._native as native; assert package.__all__ == ["add"]; assert package.add(40, 2) == 42; assert Path(native.__file__ or "").suffix in {".so", ".pyd"}'
+	"$$smoke_env/bin/python" -c 'from pathlib import Path; import python_rust_mock_architecture as package; import python_rust_mock_architecture._native as native; assert package.__all__ == ["add", "checked_sum", "lower_bound", "binary_search"]; assert package.add(40, 2) == 42; assert package.checked_sum([40, 2]) == 42; assert package.lower_bound([1, 2], 2) == 1; assert package.binary_search([1, 2], 2) == 1; assert Path(native.__file__ or "").suffix in {".so", ".pyd"}'
 
 check: lint verus-verify typecheck test coverage-python coverage-rust package-check ## Run the complete local verification sequence.

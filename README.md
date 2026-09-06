@@ -5,13 +5,14 @@ extension to an existing Python project. It covers Python libraries, standalone
 programs, FastAPI services, and Django services without forcing a package-manager
 migration.
 
-The example uses PyO3 to implement one checked integer operation and Maturin to
+The example uses PyO3 to expose checked integer operations and Maturin to
 build and install the extension. Python owns the package namespace, public
 documentation, and typing metadata. The native module stays private so the
 package controls its public API. The Rust workspace also contains a private
-Verus-verified core. Its current proof covers checked `i64` addition and
-left-to-right checked summation. The Python adapter still exposes only `add`,
-and the adapter itself remains outside the proved boundary.
+Verus-verified core. Its proof covers checked `i64` addition, left-to-right
+checked summation, sorted lower-bound search, and first-match binary search. The
+Python adapter remains outside the proved boundary and performs conversion and
+exception mapping.
 
 Agents should start with [AGENTS.md](AGENTS.md). It contains the topology decision,
 tooling-preservation rules, framework recipes, testing layers, package-manager
@@ -20,9 +21,17 @@ command matrix, and extension checklist.
 ## API
 
 ```python
-from python_rust_mock_architecture import add
+from python_rust_mock_architecture import (
+    add,
+    binary_search,
+    checked_sum,
+    lower_bound,
+)
 
 assert add(2, 3) == 5
+assert checked_sum([1, -2, 3]) == 2
+assert lower_bound([1, 2, 2, 4], 2) == 1
+assert binary_search([1, 2, 2, 4], 2) == 1
 ```
 
 `add(a, b)` accepts Python integers in the signed 64-bit range,
@@ -31,9 +40,12 @@ range raise `OverflowError`. Floats, strings, missing arguments, and extra
 arguments raise `TypeError`. Boolean operands follow normal Python integer
 behavior, so `True` is one and `False` is zero.
 
-The package exports only `add` through `__all__`. The compiled extension is
+The package exports the four supported functions through `__all__`. The compiled extension is
 loaded as `python_rust_mock_architecture._native`; it is an implementation
-detail rather than a second public API.
+detail rather than a second public API. `checked_sum` raises `OverflowError` on
+any overflowing prefix. The search functions raise `ValueError` for unsorted
+inputs and return the first eligible or matching index; `binary_search` returns
+`None` when the target is absent.
 
 ## Requirements
 
@@ -104,10 +116,10 @@ make verus-hygiene
 make verus-verify
 ```
 
-`verus-verify` checks the workspace with `-V check-api-safety`. Use
-`make verus-focus` for a faster development proof of `verified-core`; run the
-full target before handoff. The pinned standalone spike commands are also in the
-toolchain document.
+`verus-verify` checks the workspace with root-scoped `-V check-api-safety` while
+still verifying dependencies. Use `make verus-focus` for a faster development
+proof of `verified-core`; run the full target before handoff. The pinned
+standalone spike commands are also in the toolchain document.
 
 ## Wheel and source distribution
 
@@ -133,7 +145,7 @@ distribution, and imports the installed wheel from outside the checkout.
 AGENTS.md                    Agent playbook for adapting the Rust pattern
 Makefile                     Stable local and CI command surface
 python/                       Python package namespace and typing metadata
-src/lib.rs                    PyO3 module and checked Rust addition
+src/lib.rs                    PyO3 module and thin verified-core adapters
 crates/verified-core/         Private pure-Rust Verus-verified core workspace member
 tools/verus-spike/            Standalone pinned-toolchain proof fixture
 tools/verus-toolchain.toml    Verus, Rust, Z3, and vstd pins
@@ -153,8 +165,6 @@ private pure-Rust code opted into Verus verification.
 
 ## Non-goals
 
-This template does not optimize code or add benchmarks. The public Python
-example has no extra arithmetic functions, Python fallback, web service,
-database, async runtime, publishing workflow, or cross-platform release-wheel
-matrix. The private verified core has additional Rust-only examples that are not
-yet exposed through Python.
+This template does not optimize code or add benchmarks. It has no Python
+fallback, web service, database, async runtime, publishing workflow, or
+cross-platform release-wheel matrix.

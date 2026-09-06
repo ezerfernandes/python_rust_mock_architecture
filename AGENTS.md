@@ -392,11 +392,11 @@ workspace roots.
 dependencies and is only a development shortcut. Run the full target before
 handoff. A normal extension build still uses Maturin and Cargo.
 
-The current private core proves total checked `i64` addition and checked
-left-to-right summation. The root PyO3 adapter still implements the public
-`add` path separately, so a successful core proof does not prove the Python
-adapter. The public `checked_sum`, `lower_bound`, and `binary_search` APIs from
-the approved design are not complete yet.
+The current private core proves total checked `i64` addition, checked
+left-to-right summation, sorted lower-bound search, and first-match binary
+search. The root PyO3 adapter delegates all four public functions to that core
+and maps its fallible results to Python exceptions and values. Python, PyO3, and
+the adapter remain outside the proved boundary.
 
 The small `tools/verus-spike` crate is excluded from the root workspace and has
 its own lockfile. To validate the pinned release independently, run:

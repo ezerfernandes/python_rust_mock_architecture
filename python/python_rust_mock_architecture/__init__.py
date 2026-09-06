@@ -1,5 +1,5 @@
-"""Public Python interface for the Rust-backed add function."""
+"""Public Python interface for the Rust-backed verified core."""
 
-from ._native import add
+from ._native import add, binary_search, checked_sum, lower_bound
 
-__all__ = ["add"]
+__all__ = ["add", "checked_sum", "lower_bound", "binary_search"]

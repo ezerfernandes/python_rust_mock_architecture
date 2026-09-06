@@ -111,8 +111,9 @@ make verus-verify
 scoped to the selected workspace roots while dependencies are still verified.
 `make verus-focus` is a faster development shortcut that verifies only
 `verified-core` without rechecking dependencies. The current private core proof
-covers total checked `i64` addition and checked left-to-right summation. The
-root PyO3 adapter and Python package remain outside the proved core.
+covers total checked `i64` addition, checked left-to-right summation, sorted
+lower-bound search, and first-match binary search. The root PyO3 adapter and
+Python package remain outside the proved core.
 
 The complete local gate is:
 
