@@ -103,7 +103,7 @@ verus-focus: require-verus verus-hygiene ## Verify the core without rechecking d
 	$(CARGO_VERUS) focus --package verified-core --locked
 
 verus-verify: require-verus verus-hygiene ## Verify every workspace member with the pinned Verus toolchain.
-	$(CARGO_VERUS) verify --workspace --locked -- -V check-api-safety
+	$(CARGO_VERUS) verify --workspace --locked --fwd-verus-args-to roots -- -V check-api-safety
 
 build: setup ## Build a wheel and source distribution in dist.
 	mkdir -p dist
