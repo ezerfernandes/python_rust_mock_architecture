@@ -133,7 +133,7 @@ package-check: setup ## Verify clean packages and smoke-test the installed wheel
 		grep -En '(^|/)(dist|target|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|__pycache__)(/|$$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$$' <<< "$$package_list" >&2; \
 		exit 1; \
 	fi; \
-	if tar -tzf "$${sdists[0]}" | grep -Eq '(^|/)(dist|target|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|__pycache__)(/|$$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$$'; then \
+	if tar -tzf "$${sdists[0]}" | grep -E '(^|/)(dist|target|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|__pycache__)(/|$$)|\.(whl|tar\.gz|so|pyd|dylib|dll|pyc|pyo)$$' >/dev/null; then \
 		echo "generated artifacts found in source distribution" >&2; \
 		exit 1; \
 	fi; \
