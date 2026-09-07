@@ -121,6 +121,11 @@ still verifying dependencies. Use `make verus-focus` for a faster development
 proof of `verified-core`; run the full target before handoff. The pinned
 standalone spike commands are also in the toolchain document.
 
+The final proof, package, and trust-boundary evidence is recorded in
+[`docs/verus-audit.md`](docs/verus-audit.md). CI validates Ubuntu 24.04 x86_64
+with Python 3.11 and 3.13; macOS, Windows, and other architectures are not
+exercised.
+
 ## Wheel and source distribution
 
 Build normal developer artifacts in `dist/`:
@@ -149,6 +154,7 @@ src/lib.rs                    PyO3 module and thin verified-core adapters
 crates/verified-core/         Private pure-Rust Verus-verified core workspace member
 tools/verus-spike/            Standalone pinned-toolchain proof fixture
 tools/verus-toolchain.toml    Verus, Rust, Z3, and vstd pins
+docs/verus-audit.md            Final proof, package, and trust-boundary audit
 rust-toolchain.toml           Rust toolchain selected by Cargo and rustup
 tests/python/test_add.py      Python API and boundary tests
 pyproject.toml                Python metadata, Maturin, Ruff, and Mypy config

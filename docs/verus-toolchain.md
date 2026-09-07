@@ -146,6 +146,9 @@ The proof spike is an isolated toolchain check. It does not verify PyO3, Python,
 CPython, Maturin, Z3 itself, rustc, LLVM, or the Rust adapter that calls the
 current verified core. Those remain outside the proved boundary.
 
+See [`verus-audit.md`](verus-audit.md) for the dated proof, package, coverage,
+trust-boundary, and CI evidence record.
+
 ## Official references
 
 - [Verus releases](https://github.com/verus-lang/verus/releases)
