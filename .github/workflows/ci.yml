@@ -9,10 +9,14 @@ on:
 permissions:
   contents: read
 
+env:
+  VERUS_VERSION: 0.2026.08.30.b432e82
+  VERUS_ARCHIVE_SHA256: 067f5f72a457fe66b77c0c10b180f2a919a9c7481a8baa024ffc716aa931a41b
+
 jobs:
   python:
     name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -43,7 +47,7 @@ jobs:
 
   rust:
     name: Rust checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -60,10 +64,51 @@ jobs:
       - name: Run Rust checks and coverage
         run: make test-rust lint-rust coverage-rust
 
+  verus:
+    name: Verus proof
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install pinned Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.97.1-x86_64-unknown-linux-gnu
+
+      - name: Install pinned Verus release
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="verus-${VERUS_VERSION}-x86-linux.zip"
+          download_url="https://github.com/verus-lang/verus/releases/download/release%2F${VERUS_VERSION}/${archive}"
+          download_path="${RUNNER_TEMP}/${archive}"
+          install_root="${RUNNER_TEMP}/verus"
+          curl --fail --location --retry 3 --output "${download_path}" "${download_url}"
+          printf '%s  %s\n' "${VERUS_ARCHIVE_SHA256}" "${download_path}" | sha256sum --check --strict
+          mkdir -p "${install_root}"
+          unzip -q "${download_path}" -d "${install_root}"
+          test -x "${install_root}/verus-x86-linux/verus"
+          test -x "${install_root}/verus-x86-linux/cargo-verus"
+          test -x "${install_root}/verus-x86-linux/z3"
+          mv "${install_root}/verus-x86-linux" "${install_root}/${VERUS_VERSION}"
+          echo "${install_root}/${VERUS_VERSION}" >> "${GITHUB_PATH}"
+
+      - name: Check pinned verification tools
+        run: |
+          verus --version
+          cargo verus --help
+          rustc --version
+          cargo --version
+          z3 --version
+
+      - name: Run full Verus proof gate
+        run: make verus-verify
+
   package:
     name: Package and smoke test
-    needs: [python, rust]
-    runs-on: ubuntu-latest
+    needs: [python, rust, verus]
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

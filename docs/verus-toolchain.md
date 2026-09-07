@@ -128,16 +128,19 @@ coverage also requires `cargo-llvm-cov`; install it with:
 cargo +stable install cargo-llvm-cov --locked
 ```
 
-The CI workflow installs that coverage tool, but it does not yet install Verus
-or run the repository proof target.
+The CI workflow installs that coverage tool and has a dedicated `verus` job. The
+job installs this exact release after verifying its SHA-256 digest, then runs
+`make verus-verify`. The package job depends on the proof job, so package checks
+cannot pass when the full proof gate fails.
 
 ## Platform scope
 
 The validated platform for this repository is Ubuntu 24.04 x86_64, which is the
-Linux CI target. The official release also publishes prebuilt archives for
-macOS 14 arm64, macOS 15 x86_64, and Windows 2022 x86_64, but this repository
-does not test those hosts yet. Other operating systems and architectures may
-require a source build and are outside this pin's validation evidence.
+Linux CI target for all jobs. CI exercises Python 3.11 and 3.13 on that host.
+The official release also publishes prebuilt archives for macOS 14 arm64,
+macOS 15 x86_64, and Windows 2022 x86_64, but this repository does not test
+those hosts yet. Other operating systems and architectures may require a source
+build and are outside this pin's validation evidence.
 
 The proof spike is an isolated toolchain check. It does not verify PyO3, Python,
 CPython, Maturin, Z3 itself, rustc, LLVM, or the Rust adapter that calls the

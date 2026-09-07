@@ -3,11 +3,12 @@
 Date: 2026-09-04
 Status: Approved design
 
-Implementation status as of 2026-09-06: the private core contains and locally
+Implementation status as of 2026-09-07: the private core contains and locally
 verifies total checked `i64` addition, checked left-to-right summation, sorted
 lower-bound search, and first-match binary search. The public Python adapter
-exposes all four functions and remains outside the proved boundary. Verus CI
-integration and the final audit below remain requirements.
+exposes all four functions and remains outside the proved boundary. CI now
+installs the pinned Verus release, runs the full proof target, and gates package
+checks on that job; the final audit below remains a requirement.
 
 ## Goal
 

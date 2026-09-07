@@ -44,8 +44,9 @@ cargo +stable install cargo-llvm-cov --locked
 ```
 
 CI uses `taiki-e/install-action@cargo-llvm-cov` instead of compiling that tool on
-every run. The current CI workflow does not install Verus or run the Verus proof
-target yet. Local `make check` does run it.
+every run. A dedicated CI job installs the pinned Verus archive after checking
+its SHA-256 digest and runs `make verus-verify`; the package job depends on that
+proof job. Local `make check` runs the same proof target.
 
 ## 1. Inspect the target project
 
