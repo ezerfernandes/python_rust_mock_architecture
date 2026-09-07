@@ -2,9 +2,9 @@
 
 Audit date: 2026-09-07
 
-Status: local evidence is complete. The CI workflow is configured and reviewed,
-but the audit commit has not been pushed, so no GitHub Actions run exists for
-this exact revision.
+Status: complete. Local evidence and the remote CI gate passed. GitHub Actions
+run `34137761607` passed for commit `9e8af6a` after the proof hygiene job was
+updated to install its required `ripgrep` tool.
 
 ## Recorded environment
 
@@ -79,7 +79,8 @@ packaging behavior is inferred from the proof alone.
 
 `.github/workflows/ci.yml` uses Ubuntu 24.04 x86_64, installs the checksum-
 verified Verus release, runs the shared `make verus-verify` target, and makes
-the package job depend on Python, Rust, and Verus jobs. The latest recorded
-remote CI run (`34103650460`, `d4ce383`) passed before the pinned Verus job was
-added. The post-`4865710` workflow and this audit are local and require a push
-before their GitHub Actions result can be recorded.
+the package job depend on Python, Rust, and Verus jobs. The first post-proof-
+gate run (`34137590216`, `ef1516d`) exposed a missing CI prerequisite: the
+runner did not have `rg` for `make verus-hygiene`. Commit `9e8af6a` installs
+`ripgrep` in the Verus job. The corrected run (`34137761607`, `9e8af6a`) passed
+all Python, Rust, Verus, and package jobs.

@@ -8,9 +8,9 @@ verifies total checked `i64` addition, checked left-to-right summation, sorted
 lower-bound search, and first-match binary search. The public Python adapter
 exposes all four functions and remains outside the proved boundary. CI now
 installs the pinned Verus release, runs the full proof target, and gates package
-checks on that job. The local final proof, package, and trust-boundary audit is
-recorded in [`docs/verus-audit.md`](../../verus-audit.md); its GitHub Actions run
-remains pending until this revision is pushed.
+checks on that job. The final proof, package, and trust-boundary audit is
+recorded in [`docs/verus-audit.md`](../../verus-audit.md); GitHub Actions run
+`34137761607` passed for the pinned proof and package gates.
 
 ## Goal
 
